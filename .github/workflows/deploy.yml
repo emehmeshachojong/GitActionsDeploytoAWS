@@ -9,8 +9,8 @@ on:
 env:
   applicationfolder: spring-boot-hello-world-example
   AWS_REGION: us-east-1
-  S3BUCKET: codeguru-reviewer-meshach12345678
-  S3bucket_CodeGuru: codeguru-reviewer-meshach12345678  # Replace with your bucket name
+  S3BUCKET: codedeploystack-webappdeploymentbucket-mzlnytonnxiq
+  S3bucket_CodeGuru: codeguru-reviewer-codedeploystack-webappdeploymentbucket-mzlnytonnxiq  # Replace with your bucket name
 
 
 jobs:
