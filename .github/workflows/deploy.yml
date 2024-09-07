@@ -1,7 +1,6 @@
 name: Build and Deploy
 
 on:
-  #workflow_dispatch: {}
   push:
     branches: [main]
   pull_request:
@@ -10,8 +9,7 @@ env:
   applicationfolder: spring-boot-hello-world-example
   AWS_REGION: us-east-1
   S3BUCKET: codedeploystack-webappdeploymentbucket-mzlnytonnxiq
-  S3bucket_CodeGuru: codeguru-reviewer-codedeploystack-webappdeploymentbucket-mzlnytonnxiq  # Replace with your bucket name
-
+  S3bucket_CodeGuru: codeguru-reviewer-meshach12345678  # Replace with your bucket name
 
 jobs:
   build:
@@ -35,6 +33,9 @@ jobs:
         with:
           java-version: 1.8
 
+      - name: Install jq
+        run: sudo apt-get install -y jq        
+
       - name: chmod
         run: chmod -R +x ./.github
 
@@ -43,9 +44,15 @@ jobs:
         working-directory: ${{ env.applicationfolder }}
         run: $GITHUB_WORKSPACE/.github/scripts/build.sh
 
-      - name: Upload Artifact to s3
+      - name: Upload Artifact to S3
         working-directory: ${{ env.applicationfolder }}/target
         run: aws s3 cp *.war s3://${{ env.S3BUCKET }}/
+      
+      - name: Upload build artifact to GitHub Actions
+        uses: actions/upload-artifact@v2
+        with:
+          name: build-file
+          path: ${{ env.applicationfolder }}/target/*.war
 
   codescan:
     needs: build
@@ -57,19 +64,18 @@ jobs:
 
     steps:
     
-    - name: Download an artifact
+    - name: Download the artifact from GitHub Actions
       uses: actions/download-artifact@v2
       with:
-          name: build-file 
+        name: build-file 
     
     - name: Configure AWS credentials
       id: iam-role
-      continue-on-error: true
       uses: aws-actions/configure-aws-credentials@v1
       with:
-          role-to-assume: ${{ secrets.IAMROLE_GITHUB }}
-          role-session-name: GitHub-Action-Role
-          aws-region: ${{ env.AWS_REGION }}
+        role-to-assume: ${{ secrets.IAMROLE_GITHUB }}
+        role-session-name: GitHub-Action-Role
+        aws-region: ${{ env.AWS_REGION }}
     
     - uses: actions/checkout@v2
       if: steps.iam-role.outcome == 'success'
@@ -79,7 +85,6 @@ jobs:
     - name: CodeGuru Reviewer
       uses: aws-actions/codeguru-reviewer@v1.1
       if: ${{ always() }} 
-      continue-on-error: false
       with:          
         s3_bucket: ${{ env.S3bucket_CodeGuru }} 
         build_path: .
@@ -96,15 +101,13 @@ jobs:
       with:
         sarif_file: codeguru-results.sarif.json
     
-
     - run: |
-          
-          echo "Check for critical volnurability"
-          count=$(cat codeguru-results.sarif.json | jq '.runs[].results[] | select(.level == "error") | .level' | wc -l)
-          if (( $count > 0 )); then
-            echo "There are $count critical findings, hence stopping the pipeline."
-            exit 1
-          fi
+        echo "Check for critical vulnerability"
+        count=$(cat codeguru-results.sarif.json | jq '.runs[].results[] | select(.level == "error") | .level' | wc -l)
+        if (( $count > 0 )); then
+          echo "There are $count critical findings, hence stopping the pipeline."
+          exit 1
+        fi
         
   deploy:
     needs: build
@@ -115,11 +118,13 @@ jobs:
       contents: read
     steps:
     - uses: actions/checkout@v2
+
     - uses: aws-actions/configure-aws-credentials@v1
       with:
         role-to-assume: ${{ secrets.IAMROLE_GITHUB }}
         role-session-name: GitHub-Action-Role
         aws-region: ${{ env.AWS_REGION }}
+        
     - run: |
         echo "Deploying branch ${{ env.GITHUB_REF }} to ${{ github.event.inputs.environment }}"
         commit_hash=`git rev-parse HEAD`
