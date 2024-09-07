@@ -9,7 +9,7 @@ env:
   applicationfolder: spring-boot-hello-world-example
   AWS_REGION: us-east-1
   S3BUCKET: codedeploystack-webappdeploymentbucket-mzlnytonnxiq
-  S3bucket_CodeGuru: codeguru-reviewer-meshach12345678  # Replace with your bucket name
+  S3bucket_CodeGuru: codeguru-reviewer-meshach12345678
 
 jobs:
   build:
