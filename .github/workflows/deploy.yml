@@ -38,12 +38,15 @@ jobs:
         run: sudo apt-get install -y jq        
 
       - name: Make scripts executable
-        run: chmod -R +x ./.github
+        run: chmod -R +x ./.github/scripts
+
+      - name: List files in .github/scripts
+        run: ls -la .github/scripts
 
       - name: Build and Package Maven
         id: package
         working-directory: ${{ env.applicationfolder }}
-        run: ./.github/scripts/build.sh
+        run: .github/scripts/build.sh
 
       - name: Upload Artifact to S3
         working-directory: ${{ env.applicationfolder }}/target
@@ -54,6 +57,7 @@ jobs:
         with:
           name: build-file
           path: ${{ env.applicationfolder }}/target/*.war
+
 
   codescan:
     needs: build
