@@ -42,8 +42,8 @@ jobs:
 
       - name: Build and Package Maven
         id: package
-        working-directory: $GITHUB_WORKSPACE/${{ env.applicationfolder }}
-        run: $GITHUB_WORKSPACE/.github/scripts/build.sh
+        working-directory: ${{ env.applicationfolder }}
+        run: ./.github/scripts/build.sh
 
       - name: Upload Artifact to S3
         working-directory: ${{ env.applicationfolder }}/target
