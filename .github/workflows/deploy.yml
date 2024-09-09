@@ -9,7 +9,7 @@ env:
   applicationfolder: spring-boot-hello-world-example
   AWS_REGION: us-east-1
   S3BUCKET: mesh-terra-statefile-bucket
-  S3bucket_CodeGuru: codeguru-reviewer-meshach12345678
+  S3bucket_CodeGuru: codeguru-reviewer-meshach12345678910
 
 jobs:
   build:
